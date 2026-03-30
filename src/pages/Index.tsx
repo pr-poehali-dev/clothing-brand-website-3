@@ -332,7 +332,7 @@ export default function Index() {
             {[
               { img: LOOKBOOK_1, name: "Spirit of Torii", sub: "Oversized Tee / White", price: "от 4 900 ₽" },
               { img: LOOKBOOK_2, name: "Dragon Realm", sub: "Oversized Tee / White", price: "от 4 900 ₽" },
-              { img: LOGO_URL, name: "Forest Spirit", sub: "Graphic Print / Black", price: "от 5 500 ₽" },
+              { img: LOGO_FULL, name: "Forest Spirit", sub: "Graphic Print / Black", price: "от 5 500 ₽" },
             ].map((item, i) => (
               <div
                 key={i}
