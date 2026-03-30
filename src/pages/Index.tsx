@@ -1,22 +1,32 @@
 import { useState, useEffect, useRef } from "react";
 
-const LOGO_URL = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/d256c209-9494-40e8-a44c-1d187ea9f229.jpg";
+const LOGO_FULL = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/d256c209-9494-40e8-a44c-1d187ea9f229.jpg";
+const LOGO_ICON = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/64bb033e-5f56-4c62-9775-5a1e020fb582.jpg";
+const LOGO_WITH_TEXT = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/e0a4df21-3e41-47ff-8bb0-70dccc6d9fd0.jpg";
 const ABSTRACT_URL = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/6505b6db-a086-4adc-83dd-1179705f9567.jpg";
 const LOOKBOOK_1 = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/0cb0bc35-b312-48f0-8c79-157c0b5a7c02.png";
 const LOOKBOOK_2 = "https://cdn.poehali.dev/projects/19fc47f3-dc42-4df3-93eb-bcbb5b12b21d/bucket/c7b53b29-2288-46ec-a90e-6241e9ef0bd0.png";
 
 const sections = ["Главная", "О бренде", "Коллекции", "Лукбук", "Контакты"];
 
+// Анимация: 0 = старт, 1 = zoom к нижнему элементу, 2 = текст, 3 = готово
+type Phase = 0 | 1 | 2 | 3;
+
 export default function Index() {
   const [active, setActive] = useState("Главная");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [heroVisible, setHeroVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [phase, setPhase] = useState<Phase>(0);
+  const [introDone, setIntroDone] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setHeroVisible(true), 100);
-    return () => clearTimeout(t);
+    // Последовательность фаз
+    const t1 = setTimeout(() => setPhase(1), 600);   // начало zoom
+    const t2 = setTimeout(() => setPhase(2), 2200);  // появление текста
+    const t3 = setTimeout(() => setPhase(3), 3800);  // интро завершено
+    const t4 = setTimeout(() => setIntroDone(true), 4200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, []);
 
   useEffect(() => {
@@ -38,11 +48,13 @@ export default function Index() {
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
       {/* NAV */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5 transition-all duration-500"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-5 transition-all duration-700"
         style={{
           background: scrollY > 60 ? "rgba(10,10,10,0.95)" : "transparent",
           backdropFilter: scrollY > 60 ? "blur(12px)" : "none",
           borderBottom: scrollY > 60 ? "1px solid rgba(255,255,255,0.06)" : "none",
+          opacity: introDone ? 1 : 0,
+          pointerEvents: introDone ? "auto" : "none",
         }}
       >
         <button
@@ -120,7 +132,7 @@ export default function Index() {
 
         {/* Parallax abstract bg */}
         <div
-          className="absolute inset-0 opacity-[0.07]"
+          className="absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage: `url(${ABSTRACT_URL})`,
             backgroundSize: "cover",
@@ -129,62 +141,128 @@ export default function Index() {
           }}
         />
 
-        {/* Radial glow center */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,255,255,0.025) 0%, transparent 70%)",
-          }}
-        />
-
-        {/* Logo */}
+        {/* ── INTRO ANIMATION CONTAINER ── */}
         <div
           className="relative z-10 flex flex-col items-center"
           style={{
-            opacity: heroVisible ? 1 : 0,
-            transform: heroVisible ? "translateY(0) scale(1)" : "translateY(30px) scale(0.95)",
-            transition: "opacity 1.4s cubic-bezier(.16,1,.3,1), transform 1.4s cubic-bezier(.16,1,.3,1)",
+            // Фаза 1: zoom — вся группа масштабируется вверх и чуть смещается
+            transform: phase >= 1
+              ? "scale(2.8) translateY(8%)"
+              : "scale(1) translateY(0)",
+            transition: phase >= 1
+              ? "transform 2s cubic-bezier(.4,0,.2,1)"
+              : "none",
           }}
         >
-          <div style={{ filter: "drop-shadow(0 0 60px rgba(255,255,255,0.08))" }}>
+          {/* Полный логотип (верхняя часть затухает на фазе 1) */}
+          <div
+            style={{
+              opacity: phase >= 1 ? 0 : 1,
+              transition: "opacity 1.6s ease 0.3s",
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "320px",
+            }}
+          >
             <img
-              src={LOGO_URL}
-              alt="SURIMANSA"
-              className="w-72 md:w-96 lg:w-[420px] select-none"
-              style={{ transform: `translateY(${scrollY * -0.05}px)` }}
+              src={LOGO_FULL}
+              alt=""
+              className="w-full select-none"
             />
           </div>
 
+          {/* Нижний элемент — иконка + надпись */}
           <div
-            className="mt-8 text-center"
+            className="flex items-center gap-0"
             style={{
-              opacity: heroVisible ? 1 : 0,
-              transition: "opacity 1.8s ease 0.6s",
+              opacity: phase >= 0 ? 1 : 0,
+              transition: "opacity 0.8s ease",
+              // отступ сверху чтобы совпадало с нижней частью полного лого
+              marginTop: "0px",
+              position: "relative",
+              zIndex: 2,
             }}
           >
-            <p
-              className="text-[10px] text-white/30 uppercase mb-6"
-              style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: "0.6em" }}
+            {/* Иконка (маленький логотип) */}
+            <img
+              src={LOGO_ICON}
+              alt="icon"
+              className="select-none"
+              style={{
+                width: "90px",
+                height: "90px",
+                objectFit: "contain",
+                filter: "drop-shadow(0 0 20px rgba(255,255,255,0.15))",
+              }}
+            />
+
+            {/* Надпись SURIMANSA — появляется слева направо на фазе 2 через clip-path */}
+            <div
+              style={{
+                overflow: "hidden",
+                position: "relative",
+                width: "220px",
+                height: "90px",
+                clipPath: phase >= 2
+                  ? "inset(0 0% 0 0)"
+                  : "inset(0 100% 0 0)",
+                transition: phase >= 2
+                  ? "clip-path 1.3s cubic-bezier(.4,0,.2,1)"
+                  : "none",
+              }}
             >
-              Dark Art · Streetwear · Tokyo
-            </p>
-            <button
-              onClick={() => scrollTo("Коллекции")}
-              className="group relative text-xs uppercase text-white/70 hover:text-white transition-colors duration-300 px-8 py-3 border border-white/15 hover:border-white/40"
-              style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: "0.4em" }}
-            >
-              <span className="relative z-10">Смотреть коллекцию</span>
-              <span className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.03] transition-colors duration-300" />
-            </button>
+              <img
+                src={LOGO_WITH_TEXT}
+                alt="SURIMANSA"
+                className="select-none"
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: 0,
+                  width: "320px",
+                  height: "90px",
+                  objectFit: "cover",
+                  objectPosition: "right center",
+                  filter: "drop-shadow(0 0 15px rgba(255,255,255,0.1))",
+                }}
+              />
+            </div>
           </div>
+        </div>
+
+        {/* После интро — появляется подпись и кнопка */}
+        <div
+          className="absolute bottom-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-6 text-center"
+          style={{
+            opacity: phase >= 3 ? 1 : 0,
+            transition: "opacity 1s ease",
+            pointerEvents: phase >= 3 ? "auto" : "none",
+          }}
+        >
+          <p
+            className="text-[10px] text-white/30 uppercase"
+            style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: "0.6em" }}
+          >
+            Dark Art · Streetwear · Tokyo
+          </p>
+          <button
+            onClick={() => scrollTo("Коллекции")}
+            className="group relative text-xs uppercase text-white/70 hover:text-white transition-colors duration-300 px-8 py-3 border border-white/15 hover:border-white/40"
+            style={{ fontFamily: "'Oswald', sans-serif", letterSpacing: "0.4em" }}
+          >
+            <span className="relative z-10">Смотреть коллекцию</span>
+            <span className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.03] transition-colors duration-300" />
+          </button>
         </div>
 
         {/* Scroll indicator */}
         <div
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
           style={{
-            opacity: heroVisible ? 0.35 : 0,
-            transition: "opacity 2s ease 1.5s",
+            opacity: phase >= 3 ? 0.35 : 0,
+            transition: "opacity 1s ease",
           }}
         >
           <span
